@@ -1,0 +1,254 @@
+import { en } from './en';
+import React, { type ReactNode } from 'react';
+export type Language = 'en';
+export type TranslationKey = keyof typeof en;
+
+const translations = {
+  en
+};
+
+let currentLanguage: Language = 'en';
+
+export const setLanguage = (lang: Language) => {
+  currentLanguage = lang;
+};
+
+export const getCurrentLanguage = (): Language => currentLanguage;
+
+// Type-safe translation function
+export const t = (key: string): string => {
+  const keys = key.split('.');
+  let value: any = translations[currentLanguage];
+  
+  for (const k of keys) {
+    if (value && typeof value === 'object' && k in value) {
+      value = value[k];
+    } else {
+      console.warn(`Translation key not found: ${key}`);
+      return key; // Return the key if translation is not found
+    }
+  }
+  
+  return typeof value === 'string' ? value : key;
+};
+
+// HTML-safe translation function that returns JSX
+export const tHtml = (key: string): ReactNode => {
+  const translatedText = t(key);
+  
+  // If the text contains HTML tags, parse and render them
+  if (translatedText.includes('<') && translatedText.includes('>')) {
+    return parseHtmlToJsx(translatedText);
+  }
+  
+  return translatedText;
+};
+
+// Helper function to parse HTML strings into JSX elements
+const parseHtmlToJsx = (htmlString: string): ReactNode => {
+  // Simple HTML parser for common tags
+  const parts = htmlString.split(/(<[^>]+>)/);
+  const elements: ReactNode[] = [];
+  const tagStack: string[] = [];
+  let key = 0;
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    
+    if (part.startsWith('<') && part.endsWith('>')) {
+      // This is an HTML tag
+      const tagMatch = part.match(/<(\/?)([\w-]+)(?:\s+([^>]*))?>/) || [];
+      const isClosing = tagMatch[1] === '/';
+      const tagName = tagMatch[2];
+      const attributes = tagMatch[3] || '';
+      
+      if (!tagName) {
+        // Invalid tag, treat as text
+        elements.push(part);
+        continue;
+      }
+      
+      if (isClosing) {
+        // Handle closing tag
+        if (tagStack.length > 0 && tagStack[tagStack.length - 1] === tagName) {
+          tagStack.pop();
+        }
+        // Closing tags don't create elements, they're handled by the opening tag logic
+        continue;
+      } else {
+        // Handle opening tag
+        tagStack.push(tagName);
+        
+        // Parse attributes
+        const props: { [key: string]: string } = {};
+        if (attributes) {
+          const attrMatches = attributes.matchAll(/(\w+)=["']([^"']*)["']/g);
+          for (const attrMatch of attrMatches) {
+            const attrName = attrMatch[1];
+            const attrValue = attrMatch[2];
+            
+            // Convert HTML attributes to React props
+            if (attrName === 'class') {
+              props['className'] = attrValue;
+            } else if (attrName === 'for') {
+              props['htmlFor'] = attrValue;
+            } else {
+              props[attrName] = attrValue;
+            }
+          }
+        }
+        
+        // Find the matching closing tag to get inner content
+        let depth = 1;
+        let innerContent = '';
+        let j = i + 1;
+        
+        while (j < parts.length && depth > 0) {
+          const nextPart = parts[j];
+          if (nextPart.startsWith('<') && nextPart.endsWith('>')) {
+            const nextTagMatch = nextPart.match(/<(\/?)([\w-]+)/) || [];
+            const nextIsClosing = nextTagMatch[1] === '/';
+            const nextTagName = nextTagMatch[2];
+            
+            if (nextTagName === tagName) {
+              if (nextIsClosing) {
+                depth--;
+                if (depth === 0) {
+                  // Found matching closing tag
+                  break;
+                }
+              } else {
+                depth++;
+              }
+            }
+          }
+          
+          innerContent += nextPart;
+          j++;
+        }
+        
+        // Create the React element
+        const elementProps = Object.keys(props).length > 0 ? { ...props, key: key++ } : { key: key++ };
+        
+        if (innerContent.trim()) {
+          // Recursively parse inner content
+          const children = parseHtmlToJsx(innerContent);
+          elements.push(React.createElement(tagName, elementProps, children));
+        } else {
+          // Self-closing or empty element
+          elements.push(React.createElement(tagName, elementProps));
+        }
+        
+        // Skip processed parts
+        i = j;
+      }
+    } else if (part.trim()) {
+      // This is text content
+      elements.push(part);
+    }
+  }
+  
+  return elements.length === 1 ? elements[0] : elements;
+};
+
+// Function to convert custom syntax {text|classes} to HTML string
+export const tStyled = (text: string): string => {
+  const translatedText = t(text);
+  // Regular expression to match the pattern {text|classes} or {text|tag:classes}
+  const customSyntaxRegex = /\{([^|]+)\|([^}]+)\}/g;
+  
+  return translatedText.replace(customSyntaxRegex, (match, textContent, styleInfo) => {
+    const trimmedText = textContent.trim();
+    const trimmedStyle = styleInfo.trim();
+    
+    // Parse the style information
+    // Support format: "classes" or "tag:classes"
+    const styleParts = trimmedStyle.split(':');
+    let tagName = 'span';
+    let className = trimmedStyle;
+    
+    if (styleParts.length >= 2) {
+      tagName = styleParts[0];
+      className = styleParts.slice(1).join(':'); // Join back in case classes contain colons
+    }
+    
+    // Escape the text content for HTML
+    const escapedText = trimmedText
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    
+    // Generate HTML with proper class attribute
+    return parseHtmlToJsx(`<${tagName} class="${className}">${escapedText}</${tagName}>`);
+  });
+};
+
+// Main function that combines custom syntax parsing with HTML-to-JSX conversion
+const parseCustomSyntax = (text: string): React.ReactNode => {
+  // First convert custom syntax to HTML
+  const htmlString = customSyntaxToHtml(text);
+  
+  // Then parse the HTML to JSX using the existing function
+  return parseHtmlToJsx(htmlString);
+};
+
+// Enhanced version with more features
+const parseCustomSyntaxAdvanced = (text: string): React.ReactNode => {
+  // More complex regex to handle nested braces and additional attributes
+  const customSyntaxRegex = /\{([^|]+)\|([^}]+)\}/g;
+  
+  const htmlString = text.replace(customSyntaxRegex, (match, textContent, styleInfo) => {
+    const trimmedText = textContent.trim();
+    const trimmedStyle = styleInfo.trim();
+    
+    // Parse style info: "tag:classes:attr1=val1,attr2=val2"
+    const parts = trimmedStyle.split(':');
+    let tagName = 'span';
+    let className = '';
+    let additionalAttrs = '';
+    
+    if (parts.length === 1) {
+      // Just classes: "text-red-500 font-bold"
+      className = parts[0];
+    } else if (parts.length >= 2) {
+      // Tag and classes: "div:text-red-500 font-bold" or "button:bg-blue-500:id=btn1"
+      tagName = parts[0];
+      className = parts[1];
+      
+      // Handle additional attributes
+      if (parts.length > 2) {
+        const attrString = parts.slice(2).join(':');
+        const attrPairs = attrString.split(',');
+        const attrs = attrPairs
+          .map(pair => {
+            const [key, value] = pair.split('=');
+            if (key && value) {
+              return `${key.trim()}="${value.trim()}"`;
+            }
+            return '';
+          })
+          .filter(attr => attr)
+          .join(' ');
+        
+        if (attrs) {
+          additionalAttrs = ' ' + attrs;
+        }
+      }
+    }
+    
+    // Escape text content
+    const escapedText = trimmedText
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    
+    // Generate HTML
+    return `<${tagName} class="${className}"${additionalAttrs}>${escapedText}</${tagName}>`;
+  });
+  
+  return parseHtmlToJsx(htmlString);
+};
