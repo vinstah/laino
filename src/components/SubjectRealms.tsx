@@ -7,8 +7,6 @@ import {
   ChevronRight,
   Star,
   Target,
-  Lightbulb,
-  Puzzle
 } from 'lucide-react';
 import { t, tStyled } from '../lang';
 
@@ -22,15 +20,15 @@ const SubjectRealms: React.FC<SubjectRealmsProps> = ({ onSubjectSelect }) => {
   const realms = [
     {
       id: 'mathematics',
-      title: subjects.mathematics?.title || 'Mathematics Kingdom',
+      title: subjects?.mathematics?.title || 'Mathematics Kingdom',
       icon: <Calculator className="h-12 w-12 text-blue-500" />,
-      description: subjects.mathematics?.description || '',
-      features: subjects.mathematics?.features || [],
+      description: subjects?.mathematics?.description || '',
+      features: subjects?.mathematics?.features || [],
       gradient: 'from-blue-500 to-cyan-500',
       bgColor: 'bg-blue-50',
       quests: 127,
-      difficulty: subjects.mathematics?.difficulty || 'Scaffolded Learning',
-      realWorldFocus: subjects.mathematics?.realWorldFocus || ''
+      difficulty: subjects?.mathematics?.difficulty || 'Scaffolded Learning',
+      realWorldFocus: subjects?.mathematics?.realWorldFocus || ''
     },
     {
       id: 'language-arts',
@@ -148,45 +146,6 @@ const SubjectRealms: React.FC<SubjectRealmsProps> = ({ onSubjectSelect }) => {
           ))}
         </div>
 
-        {/* Teacher-Designed Learning Approach */}
-        <div className="mt-16 bg-gray-50 rounded-3xl p-8">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              {tStyled('subjects.learningApproach.title')}
-            </h3>
-            <div className="text-gray-600 max-w-2xl mx-auto">
-              {tStyled('subjects.learningApproach.subtitle')}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { 
-                icon: <Puzzle className="h-8 w-8 text-blue-500" />, 
-                title: learningApproach.realWorldContext?.title || "Real-World Context", 
-                desc: learningApproach.realWorldContext?.description || ""
-              },
-              { 
-                icon: <Lightbulb className="h-8 w-8 text-yellow-500" />, 
-                title: learningApproach.deepUnderstanding?.title || "Deep Understanding", 
-                desc: learningApproach.deepUnderstanding?.description || ""
-              },
-              { 
-                icon: <Target className="h-8 w-8 text-green-500" />, 
-                title: learningApproach.scaffoldedSupport?.title || "Scaffolded Support", 
-                desc: learningApproach.scaffoldedSupport?.description || ""
-              }
-            ].map((approach, index) => (
-              <div key={index} className="text-center">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-md mx-auto">
-                  {approach.icon}
-                </div>
-                <h4 className="font-semibold text-gray-900 mb-2">{tStyled(`subjects.learningApproach.${index === 0 ? 'realWorldContext' : index === 1 ? 'deepUnderstanding' : 'scaffoldedSupport'}.title`)}</h4>
-                <div className="text-gray-600 text-sm">{tStyled(`subjects.learningApproach.${index === 0 ? 'realWorldContext' : index === 1 ? 'deepUnderstanding' : 'scaffoldedSupport'}.description`)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

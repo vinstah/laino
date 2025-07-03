@@ -6,7 +6,6 @@ export const en = {
     dashboard: 'Dashboard',
     forEducators: 'For Educators',
     research: 'Research',
-    cms: 'CMS',
     profile: 'Profile'
   },
 
@@ -417,30 +416,6 @@ export const en = {
     privacyPolicy: 'Privacy policy available in <strong>legal section</strong>',
     termsOfService: 'Terms of service available in <strong>legal section</strong>',
     contactEmail: 'Contact: <strong>support@neuroquestacademy.com</strong>'
-  },
-
-  // CMS
-  cms: {
-    title: '{NeuroQuest CMS|text-blue-700 font-bold}',
-    subtitle: 'Content Management System',
-    tabs: {
-      content: 'Content Management',
-      users: 'User Management',
-      analytics: 'Analytics',
-      settings: 'Settings'
-    },
-    contentManagement: {
-      title: 'Content Management',
-      subtitle: 'Manage learning quests, assessments, and educational content',
-      createNewQuest: 'Create New Quest',
-      searchQuests: 'Search quests...',
-      allStatus: 'All Status',
-      published: '{Published|text-green-600 font-semibold}',
-      draft: '{Draft|text-yellow-600 font-semibold}',
-      archived: '{Archived|text-gray-600 font-semibold}',
-      moreFilters: 'More Filters',
-      learningQuests: 'Learning Quests'
-    }
   },
 
   // Educator Portal

@@ -193,7 +193,8 @@ const InteractiveQuestion: React.FC<InteractiveQuestionProps> = ({
         </div>
         
         {/* Drop Zone */}
-        <div className="space-y-4">
+        <div className="space-y-4" onDrop={(e) => {
+          e.preventDefault(); console.log('Dropped:', draggedItem);}}>
           <h4 className="font-semibold text-gray-700">Drop here:</h4>
           <div className={`
             min-h-48 border-3 border-dashed rounded-xl p-6 transition-all duration-300

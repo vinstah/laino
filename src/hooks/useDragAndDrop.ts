@@ -74,6 +74,8 @@ export const useDragAndDrop = () => {
     const clientY = 'touches' in event ? event.changedTouches[0].clientY : event.clientY;
 
     const dropZone = dropZones.find(zone => {
+      console.log(zone);
+      
       const { x, y, width, height } = zone.position;
       return clientX >= x && clientX <= x + width &&
              clientY >= y && clientY <= y + height &&
